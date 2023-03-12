@@ -4,19 +4,27 @@ import gitHubReducer from "./GithubReducer";
 const GithubContext = createContext();
 
 export const GithubProvider = ({ children }) => {
-	// const [userData, setUserData] = useState([]);
-	// const [isLoading, setIsLoading] = useState(true);
 	const initialState = { userData: [], isLoading: false };
 	const [state, dispatcher] = useReducer(gitHubReducer, initialState);
 
-	const fetchUsers = async () => {
-		const response = await axios.get(`https://api.github.com/users`);
-		dispatcher({ type: "USERS", payload: response.data });
+	const searchUsers = async (search) => {
+		const params = new URLSearchParams({ q: search });
+		const {
+			data: { items },
+		} = await axios.get(`https://api.github.com/search/users?${params}`);
+		console.log(items);
+		dispatcher({ type: "USERS", payload: items });
 		dispatcher({ type: "LOADING", payload: false });
 	};
 
+	const clearSearch = () => {
+		dispatcher({ type: "USERS", payload: [] });
+	};
+
 	return (
-		<GithubContext.Provider value={{ state, dispatcher, fetchUsers }}>
+		<GithubContext.Provider
+			value={{ state, dispatcher, searchUsers, clearSearch }}
+		>
 			{children}
 		</GithubContext.Provider>
 	);
